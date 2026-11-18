@@ -1,0 +1,4 @@
+node_modules/
+.env
+# Bevat API-tokens van klanten: nooit committen
+config/phonebooks.json

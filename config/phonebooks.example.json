@@ -1,0 +1,22 @@
+{
+  "phonebooks": [
+    {
+      "name": "Voorbeeld BV",
+      "title": "Voorbeeld BV",
+      "key": "VERVANG-MET-npm-run-phonebook-key-xxxxxxxxxx",
+      "apiToken": "api-token-van-de-servicegebruiker",
+      "clientUuid": "00000000-0000-0000-0000-000000000000",
+      "colleagues": true,
+      "showCompany": true,
+      "numberFormat": "e164",
+      "allowedIps": ["203.0.113.10", "198.51.100.0/24"]
+    },
+    {
+      "name": "Tweede klant",
+      "key": "VERVANG-MET-npm-run-phonebook-key-yyyyyyyyyy",
+      "apiTokenEnv": "PHONEBOOK_TOKEN_TWEEDE_KLANT",
+      "clientUuid": "11111111-1111-1111-1111-111111111111",
+      "numberFormat": "national"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "voys-contacts-dialer",
+  "version": "1.0.0",
+  "description": "Web app: log in met je Voys/VoIPGRID-account, kies een contact uit het gedeelde Contactbook en laat je bureautoestel bellen via Click-to-dial.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test test/*.test.js",
+    "mock": "node test/mock-voys.js",
+    "phonebook:key": "node src/phonebook-cli.js key",
+    "phonebook:check": "node src/phonebook-cli.js check"
+  }
+}

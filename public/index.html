@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{APP_NAME}}</title>
+  <meta name="description" content="Bel je gedeelde contacten vanaf je eigen toestel.">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#161818" media="(prefers-color-scheme: dark)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="{{APP_NAME}}">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/brand/favicon-64.png" type="image/png">
+  <link rel="preload" href="/fonts/poppins-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <!-- Inloggen -->
+  <main id="login-view" class="login" hidden>
+    <form id="login-form" class="card login-card" novalidate>
+      <div class="brand">
+        <picture>
+          <source srcset="/brand/logo-dark.webp" media="(prefers-color-scheme: dark)">
+          <img class="brand-logo" src="/brand/logo-light.webp" alt="{{COMPANY_NAME}}" width="200" height="200">
+        </picture>
+        <h1>{{APP_NAME}}</h1>
+      </div>
+      <p class="muted intro">Log in met je eigen account van het telefonieplatform. Klik daarna op een contact en je eigen toestel gaat over.</p>
+
+      <div id="credentials-step">
+        <label>E-mailadres
+          <input id="email" type="email" autocomplete="username" required autofocus>
+        </label>
+        <label>Wachtwoord
+          <input id="password" type="password" autocomplete="current-password" required>
+        </label>
+      </div>
+
+      <div id="otp-step" hidden>
+        <label>Verificatiecode (2FA)
+          <input id="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="8">
+        </label>
+        <button type="button" id="otp-back" class="link">Terug</button>
+      </div>
+
+      <p id="login-error" class="error" role="alert" hidden></p>
+      <button id="login-submit" type="submit" class="primary">Inloggen</button>
+    </form>
+  </main>
+
+  <!-- App -->
+  <div id="app-view" class="app" hidden>
+    <header class="topbar">
+      <div class="who-wrap">
+        <a href="{{WEBSITE_URL}}" target="_blank" rel="noopener noreferrer" title="{{COMPANY_NAME}}">
+          <img class="topbar-logo" src="/brand/mark.png" alt="{{COMPANY_NAME}}" width="54" height="40">
+        </a>
+        <div class="who">
+          <strong id="user-name"></strong>
+          <span id="user-meta" class="muted"></span>
+        </div>
+      </div>
+      <label class="device">
+        <span>Bel via</span>
+        <select id="device-select" aria-label="Toestel waarmee je belt"></select>
+      </label>
+      <button id="logout" type="button" class="ghost">Uitloggen</button>
+    </header>
+
+    <section class="toolbar">
+      <nav class="tabs" role="tablist">
+        <button role="tab" class="tab" id="tab-contacts" aria-selected="true" data-tab="contacts">Contacten <span class="count" id="count-contacts"></span></button>
+        <button role="tab" class="tab" id="tab-colleagues" aria-selected="false" data-tab="colleagues" hidden>Collega's <span class="count" id="count-colleagues"></span></button>
+      </nav>
+      <div class="search">
+        <input id="search" type="search" placeholder="Zoek naam, bedrijf of nummer" autocomplete="off" aria-label="Zoeken">
+        <button id="refresh" type="button" class="ghost icon" title="Vernieuwen" aria-label="Vernieuwen">↻</button>
+        <button id="new-contact" type="button" class="ghost add" aria-label="Nieuw contact" title="Nieuw contact">+<span class="add-label"> Nieuw contact</span></button>
+      </div>
+      <form id="dial-form" class="dial">
+        <input id="dial-number" type="tel" placeholder="Of typ een nummer…" aria-label="Nummer bellen" autocomplete="off">
+        <button type="submit" class="primary">Bel</button>
+      </form>
+    </section>
+
+    <p id="list-message" class="muted center" hidden></p>
+    <ul id="list" class="list" aria-live="polite"></ul>
+  </div>
+
+  <footer class="site-footer">
+    <nav class="footer-links" aria-label="Handige links">
+      <a href="{{PORTAL_URL}}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">⚙</span> VoIP-platform</a>
+      <a href="{{WEBPHONE_URL}}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">☎</span> Webphone</a>
+      <a href="{{WEBSITE_URL}}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">↗</span> {{WEBSITE_HOST}}</a>
+    </nav>
+    <p class="credits">Deze app is een extra dienst van {{COMPANY_NAME}} &middot; <span id="footer-year">{{YEAR}}</span></p>
+  </footer>
+
+  <!-- Contact toevoegen / bewerken -->
+  <dialog id="contact-dialog" class="modal" aria-labelledby="contact-dialog-title">
+    <form id="contact-form" method="dialog" novalidate>
+      <header class="modal-head">
+        <h2 id="contact-dialog-title">Contact</h2>
+        <button type="button" class="ghost icon" data-close aria-label="Sluiten">✕</button>
+      </header>
+      <div class="modal-body">
+        <div class="two">
+          <label>Voornaam <input id="cf-given" maxlength="100" autocomplete="off"></label>
+          <label>Achternaam <input id="cf-family" maxlength="100" autocomplete="off"></label>
+        </div>
+        <label>Bedrijf <input id="cf-company" maxlength="200" autocomplete="off"></label>
+        <fieldset class="phones">
+          <legend>Telefoonnummers</legend>
+          <div id="cf-numbers"></div>
+          <button type="button" id="cf-add-number" class="link">+ Nummer toevoegen</button>
+        </fieldset>
+        <label>Notitie <textarea id="cf-note" rows="2" maxlength="1000"></textarea></label>
+        <p class="muted small">Gedeelde contacten zijn zichtbaar voor de hele organisatie, ook in de app, de Webphone en op de toestellen.</p>
+        <p id="cf-error" class="error" role="alert" hidden></p>
+      </div>
+      <footer class="modal-foot">
+        <button type="button" id="cf-delete" class="ghost danger-text" hidden>Verwijderen</button>
+        <span class="spacer"></span>
+        <button type="button" class="ghost" data-close>Annuleren</button>
+        <button type="submit" id="cf-save" class="primary">Opslaan</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Verwijderen: dubbele bevestiging -->
+  <dialog id="delete-dialog" class="modal small-modal" aria-labelledby="delete-title">
+    <div class="modal-body">
+      <h2 id="delete-title"></h2>
+      <p id="delete-text"></p>
+      <p id="delete-error" class="error" role="alert" hidden></p>
+    </div>
+    <footer class="modal-foot">
+      <span class="spacer"></span>
+      <button type="button" id="delete-cancel" class="ghost">Annuleren</button>
+      <button type="button" id="delete-confirm" class="danger"></button>
+    </footer>
+  </dialog>
+
+  <!-- Gespreksstatus -->
+  <aside id="call-panel" class="call-panel" hidden role="status" aria-live="assertive">
+    <div class="call-info">
+      <span id="call-dot" class="dot"></span>
+      <div>
+        <strong id="call-title"></strong>
+        <div id="call-sub" class="muted"></div>
+      </div>
+    </div>
+    <div class="call-actions">
+      <button id="call-hangup" type="button" class="danger">Ophangen</button>
+      <button id="call-close" type="button" class="ghost" hidden>Sluiten</button>
+    </div>
+  </aside>
+</body>
+</html>

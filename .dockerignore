@@ -1,0 +1,7 @@
+node_modules
+test
+.env
+.git
+*.md
+# API-tokens horen niet in de image; mount het bestand bij het starten
+config/phonebooks.json
