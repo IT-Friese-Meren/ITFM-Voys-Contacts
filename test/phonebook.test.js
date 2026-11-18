@@ -155,3 +155,21 @@ test('configuratie wordt zonder herstart opnieuw geladen', async () => {
   writeFileSync(file, '{ kapot');
   assert.equal((await get(`/yealink/${NEW}/phonebook.xml`)).status, 200);
 });
+
+test('verzoeken worden gelogd zonder de sleutel', async () => {
+  const lines = [];
+  const orig = console.info;
+  console.info = (...a) => { lines.push(a.join(' ')); };
+  try {
+    await get(`/yealink/${KEY_A}/phonebook.xml`, { 'User-Agent': 'Yealink SIP-T46U 108.86.0.20' });
+    await get('/yealink/iets/anders');
+    await new Promise((r) => setTimeout(r, 20));
+  } finally {
+    console.info = orig;
+  }
+  const req = lines.filter((l) => l.startsWith('[telefoonboek] GET'));
+  assert.equal(req.length, 2);
+  assert.match(req[0], /GET 200 Klant A van 127\.0\.0\.1 via url \(\d+ ms\) "Yealink SIP-T46U 108\.86\.0\.20"/);
+  assert.match(req[1], /GET 404 - van .* via ongeldig-pad/);
+  assert.ok(lines.every((l) => !l.includes(KEY_A)), 'sleutel nooit in de log');
+});

@@ -484,6 +484,7 @@ export function createApp(config, deps = {}) {
     const entry = phonebooks.findByKey(key);
     // Onbekende sleutel en uitgeschakelde functie geven hetzelfde antwoord: niets verraden.
     if (!entry) return plain(404, 'Niet gevonden');
+    res.phonebookName = entry.name;
     if (!ipAllowed(clientIp(req), entry.allowedIps)) return plain(403, 'Geen toegang vanaf dit adres');
     if (!phonebooks.allow(entry)) return plain(429, 'Te veel verzoeken', { 'Retry-After': '60' });
 
@@ -502,6 +503,18 @@ export function createApp(config, deps = {}) {
     res.end(req.method === 'HEAD' ? undefined : book.xml);
   }
 
+  // Eén logregel per toestelverzoek. De sleutel wordt nooit gelogd; alleen hoe hij is meegestuurd.
+  function logPhonebookRequest(req, res, pathname) {
+    const started = Date.now();
+    const via = pathname === '/yealink/phonebook.xml'
+      ? (String(req.headers.authorization || '').startsWith('Basic ') ? 'basic' : 'geen-sleutel')
+      : (/^\/yealink\/[A-Za-z0-9_-]{32,128}\/phonebook\.xml$/.test(pathname) ? 'url' : 'ongeldig-pad');
+    const ua = String(req.headers['user-agent'] || '-').replace(/[^\x20-\x7E]/g, '').slice(0, 160);
+    res.on('finish', () => {
+      console.info(`[telefoonboek] ${req.method} ${res.statusCode} ${res.phonebookName || '-'} van ${clientIp(req)} via ${via} (${Date.now() - started} ms) "${ua}"`);
+    });
+  }
+
   // ---------- router ----------
 
   async function handle(req, res) {
@@ -511,7 +524,12 @@ export function createApp(config, deps = {}) {
     const m = req.method;
 
     if (pathname === '/healthz') return send(res, 200, { ok: true });
-    if (pathname.startsWith('/yealink/') && (m === 'GET' || m === 'HEAD')) {
+    if (pathname.startsWith('/yealink/')) {
+      logPhonebookRequest(req, res, pathname);
+      if (m !== 'GET' && m !== 'HEAD') {
+        res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8', Allow: 'GET, HEAD' });
+        return res.end('Methode niet toegestaan');
+      }
       if (pathname === '/yealink/phonebook.xml') return yealinkPhonebook(req, res, null);
       const pb = pathname.match(/^\/yealink\/([A-Za-z0-9_-]{32,128})\/phonebook\.xml$/);
       if (pb) return yealinkPhonebook(req, res, pb[1]);
