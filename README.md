@@ -1,5 +1,23 @@
 # Contacten & Bellen (klik-en-bel voor bureautoestellen)
 
+> **Let op: dit is een Proof of Concept (PoC) en nog niet productieklaar.**
+> Het project laat zien dat het werkt, maar is nog niet geschikt voor gebruik in productie. Gebruik het op eigen risico. Er wordt geen support op gegeven.
+
+### Status: Proof of Concept
+
+Wat nog ontbreekt of open staat voordat dit productieklaar is:
+
+- **Sessies in het geheugen:** na een herstart moet iedereen opnieuw inloggen, en er kan maar een instantie draaien (geen Redis of database).
+- **Geen beveiligingsaudit:** er is geen onafhankelijke security review of pentest gedaan.
+- **Beperkt getest:** alleen met een nagebootste API en in een enkele omgeving. Het Yealink-telefoonboek is nog niet getest op meerdere toestelmodellen en firmwareversies.
+- **Ongedocumenteerde Voys-endpoints:** inloggen gebruikt `permission/apitoken/` (de flow van Vialer), dat niet in de officiele OpenAPI-documentatie staat. Ook wijkt het antwoord van de gebruikerslijst af van de documentatie. Wijzigingen aan de Voys-kant kunnen de app breken.
+- **Geen audit-log:** van wie welk contact heeft toegevoegd, gewijzigd of verwijderd.
+- **Geen CI/CD, monitoring of alerting.**
+- **Configuratie in een JSON-bestand:** de klanttokens staan in een bestand op schijf en niet in een secrets manager.
+- **Niet officieel:** dit is geen product van Voys of VoIPGRID en wordt niet door hen ondersteund.
+
+---
+
 Een webapp waarin een gebruiker inlogt met zijn **eigen Voys/VoIPGRID-account**, de **gedeelde contacten** ziet die ook in Vialer, de Voys-app en de Webphone staan, en met een klik **zijn eigen toestel laat overgaan**. Dat kan ook een vast bureautoestel zijn (Yealink e.d.). Neemt de gebruiker op, dan belt het platform het contact en verbindt het gesprek.
 
 ## Hoe het werkt
@@ -171,7 +189,7 @@ Naamherkenning bij binnenkomende gesprekken werkt alleen als het nummer precies 
 
 ## Huisstijl en footer
 
-Kleuren, lettertypen (Poppins en Play) en logo's komen van [itfm.nl](https://www.itfm.nl). Lettertypen en logo's staan in `public/fonts` en `public/brand` en worden door de app zelf geserveerd. Er worden dus geen externe bronnen geladen. De footer toont links naar het VoIP-platform, de Webphone en de website, plus "Deze app is een extra dienst van IT Friese Meren B.V. - <jaartal>". Het jaartal wordt automatisch bepaald. Aanpassen kan via `PORTAL_URL`, `WEBPHONE_URL`, `WEBSITE_URL` en `COMPANY_NAME`.
+Kleuren, lettertypen (Poppins en Play) en logo's komen van [itfm.nl](https://www.itfm.nl). Lettertypen en logo's staan in `public/fonts` en `public/brand` en worden door de app zelf geserveerd. Er worden dus geen externe bronnen geladen. De lettertypen vallen onder de SIL Open Font License; zie `public/fonts/OFL-Poppins.txt` en `public/fonts/OFL-Play.txt`. Logo's en huisstijl zijn eigendom van IT Friese Meren B.V. De footer toont links naar het VoIP-platform, de Webphone en de website, plus "Deze app is een extra dienst van IT Friese Meren B.V. - <jaartal>". Het jaartal wordt automatisch bepaald. Aanpassen kan via `PORTAL_URL`, `WEBPHONE_URL`, `WEBSITE_URL` en `COMPANY_NAME`.
 
 ## Debuggen
 
