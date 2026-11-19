@@ -1,18 +1,20 @@
 # Contacten & Bellen (klik-en-bel voor bureautoestellen)
 
-Een webapp waarin een gebruiker inlogt met zijn **eigen Voys/VoIPGRID-account**, de **gedeelde contacten** ziet die ook in Vialer, de Voys-app en de Webphone staan, en met één klik **zijn eigen toestel laat overgaan**. Dat kan ook een vast bureautoestel zijn (Yealink e.d.). Neemt de gebruiker op, dan belt het platform het contact en verbindt het gesprek.
+Een webapp waarin een gebruiker inlogt met zijn **eigen Voys/VoIPGRID-account**, de **gedeelde contacten** ziet die ook in Vialer, de Voys-app en de Webphone staan, en met een klik **zijn eigen toestel laat overgaan**. Dat kan ook een vast bureautoestel zijn (Yealink e.d.). Neemt de gebruiker op, dan belt het platform het contact en verbindt het gesprek.
 
 ## Hoe het werkt
 
 ```
-Browser ──(sessiecookie)──> deze app (Node) ──(API-token van de gebruiker)──> Voys-platform
-                                         │
-                                         ├─ POST api.voys.nl/api/permission/apitoken/        inloggen (+2FA), zelfde flow als Vialer
-                                         ├─ GET  api.voys.nl/api/v2/users/auth-context        client_uuid / user_uuid
-                                         ├─ GET  api.voys.nl/api/v2/user/{uuid}/details       toestellen van de gebruiker
-                                         ├─ GET  holodeck…/contactbook/clients/{uuid}/contacts gedeelde contacten (Contactbook)
-                                         ├─ GET  api.voys.nl/api/v2/clients/{id}/users        collega's (als de gebruiker dit mag zien)
-                                         └─ POST api.voys.nl/api/clicktodial/  (+ GET/DELETE) gesprek opzetten, status volgen, ophangen
+Browser --(sessiecookie)--> deze app (Node) --(API-token van de gebruiker)--> Voys-platform
+                                       |
+                                       +-- POST api.voys.nl/api/permission/apitoken/          inloggen (+2FA), zelfde flow als Vialer
+                                       +-- GET  api.voys.nl/api/v2/users/auth-context          client_uuid / user_uuid
+                                       +-- GET  api.voys.nl/api/v2/user/{uuid}/details         toestellen van de gebruiker
+                                       +-- GET  holodeck.../contactbook/clients/{uuid}/contacts gedeelde contacten (Contactbook)
+                                       +-- GET  api.voys.nl/api/v2/clients/{id}/users          collega's (als de gebruiker dit mag zien)
+                                       +-- POST api.voys.nl/api/clicktodial/ (+ GET/DELETE)    gesprek opzetten, status volgen, ophangen
+
+Toestel (Yealink) --(sleutel)--> deze app --(API-token servicegebruiker)--> Contactbook + collega's --> XML-telefoonboek
 ```
 
 Alles gebeurt met de rechten van de ingelogde gebruiker zelf. Er is geen beheerders- of partnertoken nodig. Wat iemand in Freedom niet mag, mag hij hier ook niet.
@@ -24,12 +26,12 @@ Bronnen: [Voys OpenAPI-portaal](https://openapi.eu-production.holodeck.voys.nl/)
 ## Functies
 
 - Inloggen met e-mail en wachtwoord, inclusief tweestapsverificatie (2FA)
-- Gedeelde contacten uit het Contactbook, doorzoekbaar op naam, bedrijf en nummer (`06…`, `+316…` en `00316…` vinden allemaal hetzelfde)
+- Gedeelde contacten uit het Contactbook, doorzoekbaar op naam, bedrijf en nummer (`06...`, `+316...` en `00316...` vinden allemaal hetzelfde)
 - Kaartweergave: afhankelijk van de schermbreedte staan er meerdere contacten naast elkaar
-- **Contacten beheren**: toevoegen, bewerken en verwijderen in het gedeelde Contactbook. Nationale nummers (`06…`, `020…`) worden automatisch omgezet naar internationaal formaat op basis van het land van de klant. Verwijderen vraagt **twee keer** om bevestiging ("Verwijderen?" → "Weet je het zeker?"); de server weigert een verwijderverzoek ook zonder expliciete bevestiging. Wijzigingen zijn direct zichtbaar in Vialer, de Webphone en op de toestellen. Of iemand mag beheren, bepalen de rechten van zijn Voys-account
+- **Contacten beheren**: toevoegen, bewerken en verwijderen in het gedeelde Contactbook. Nationale nummers (`06...`, `020...`) worden automatisch omgezet naar internationaal formaat op basis van het land van de klant. Verwijderen vraagt **twee keer** om bevestiging ("Verwijderen?" -> "Weet je het zeker?"); de server weigert een verwijderverzoek ook zonder expliciete bevestiging. Wijzigingen zijn direct zichtbaar in Vialer, de Webphone en op de toestellen. Of iemand mag beheren, bepalen de rechten van zijn Voys-account
 - Tabblad **Collega's**. Het toestelnummer komt van de gebruiker zelf of van het VoIP-account van de gekozen bestemming; collega's zonder nummer worden wel getoond, maar zijn niet te bellen. Het tabblad verschijnt alleen als de gebruiker de gebruikerslijst mag zien
 - **Bel via**: kies het toestel dat moet overgaan (bureautoestel, vast nummer, webphone of app). De keuze wordt per browser onthouden; standaard is dat het eerste bureautoestel. *Standaard (klik-en-bel-instelling)* gebruikt wat in Freedom is ingesteld
-- Live gespreksstatus (toestel gaat over → contact wordt gebeld → verbonden) met een knop **Ophangen**
+- Live gespreksstatus (toestel gaat over -> contact wordt gebeld -> verbonden) met een knop **Ophangen**
 - Vrij nummer intypen en bellen
 - Licht en donker thema, werkt ook op mobiel
 
@@ -40,7 +42,7 @@ Je hebt Node.js 20 of hoger nodig. Er zijn geen npm-dependencies.
 ```bash
 # Tegen het echte Voys-platform:
 COOKIE_SECURE=false npm start
-# → http://localhost:3000
+# -> http://localhost:3000
 
 # Of met de nagebootste API (zonder echte account):
 npm run mock                     # terminal 1, poort 4010
@@ -63,21 +65,21 @@ docker run -d -p 3000:3000 -e TRUST_PROXY=true --name contacten-bellen contacten
 
 Zet er een reverse proxy met HTTPS voor (Caddy, nginx, Traefik). `COOKIE_SECURE=true` is in de image al de standaard. Alle instellingen staan in [`.env.example`](.env.example).
 
-**Let op:** sessies worden in het geheugen bewaard. Na een herstart moeten gebruikers opnieuw inloggen. Draai één instantie, of vervang `SessionStore` in `src/sessions.js` door Redis als je wilt opschalen.
+**Let op:** sessies worden in het geheugen bewaard. Na een herstart moeten gebruikers opnieuw inloggen. Draai een instantie, of vervang `SessionStore` in `src/sessions.js` door Redis als je wilt opschalen.
 
 ## Installeren als app (PWA)
 
 De app is een Progressive Web App: hij heeft een manifest, een service worker en app-iconen. Via **HTTPS** (of op `localhost`) kun je hem installeren:
 
-- **Windows/macOS (Chrome, Edge):** het installatie-icoon in de adresbalk, of menu → *App installeren*. De app opent daarna in een eigen venster, zonder browserbalk.
-- **Android (Chrome):** menu → *Toevoegen aan startscherm* / *App installeren*.
-- **iPhone/iPad (Safari):** deelknop → *Zet op beginscherm*.
+- **Windows/macOS (Chrome, Edge):** het installatie-icoon in de adresbalk, of menu -> *App installeren*. De app opent daarna in een eigen venster, zonder browserbalk.
+- **Android (Chrome):** menu -> *Toevoegen aan startscherm* / *App installeren*.
+- **iPhone/iPad (Safari):** deelknop -> *Zet op beginscherm*.
 
 Op een gewoon `http://`-adres (bijv. `http://192.168.x.x:3000`) werkt installeren **niet**, omdat browsers dan geen service worker toestaan. Dat is een beveiligingsregel van de browser.
 
-Offline laadt de app-schil gewoon, met de melding dat je verbinding nodig hebt. Contacten en sessiegegevens worden bewust **niet** in de browser gecachet; bellen vraagt sowieso verbinding met het platform. De naam van de geïnstalleerde app volgt `APP_NAME`.
+Offline laadt de app-schil gewoon, met de melding dat je verbinding nodig hebt. Contacten en sessiegegevens worden bewust **niet** in de browser gecachet; bellen vraagt sowieso verbinding met het platform. De naam van de geinstalleerde app volgt `APP_NAME`.
 
-Na een update ziet de geïnstalleerde app de nieuwe versie bij de eerstvolgende start (network-first).
+Na een update ziet de geinstalleerde app de nieuwe versie bij de eerstvolgende start (network-first).
 
 ## Yealink-telefoonboek (Remote Phone Book)
 
@@ -112,12 +114,12 @@ Per klant levert de app een XML-telefoonboek in Yealink-formaat. Het bevat de ge
    |---|---|
    | `name` | Interne naam, voor de logs en `phonebook:check` |
    | `title` | Titel op het toestel (standaard gelijk aan `name`) |
-   | `key` | Geheime sleutel die het toestel meestuurt (32–128 tekens) |
+   | `key` | Geheime sleutel die het toestel meestuurt (32-128 tekens) |
    | `apiToken` / `apiTokenEnv` | Het token zelf, of de naam van een omgevingsvariabele waarin het staat |
    | `clientUuid` | De klant. De server controleert dat het token bij deze klant hoort en levert anders niets |
    | `colleagues` | Groep "Collega's" met interne nummers tonen (standaard `true`) |
    | `showCompany` | "Naam - Bedrijf" als weergavenaam (standaard `true`) |
-   | `numberFormat` | `e164` (`+31201234567`, standaard) of `national` (`0201234567`, buitenland als `0032…`) |
+   | `numberFormat` | `e164` (`+31201234567`, standaard) of `national` (`0201234567`, buitenland als `0032...`) |
    | `allowedIps` | Optioneel: alleen deze IP-adressen of IPv4-bereiken (CIDR) mogen het ophalen, bijv. het publieke IP van het kantoor |
    | `contactsGroup` / `colleaguesGroup` | Andere namen voor de groepen (standaard "Contacten" / "Collega's") |
 
@@ -126,7 +128,7 @@ Per klant levert de app een XML-telefoonboek in Yealink-formaat. Het bevat de ge
    ```bash
    npm run phonebook:check              # alle klanten
    npm run phonebook:check "Voorbeeld BV"
-   # ✔ Voorbeeld BV: 147 contacten, 10 collega's (…)
+   # OK Voorbeeld BV: 147 contacten, 10 collega's (...)
    ```
 
 ### Yealink provisionen
@@ -154,7 +156,7 @@ features.remote_phonebook.flash_time = 3600
 - `features.remote_phonebook.enable = 1` zet het opzoeken van namen bij in- en uitgaande gesprekken aan.
 - `flash_time` is het verversinterval in seconden. Op veel modellen is het minimum 3600.
 - **Controleer de parameternamen en toegestane waarden in de Yealink Admin Guide van jullie modellen en firmware**, want die verschillen per serie.
-- Handmatig instellen kan ook in de webinterface van het toestel, onder *Directory → Remote Phone Book*.
+- Handmatig instellen kan ook in de webinterface van het toestel, onder *Directory -> Remote Phone Book*.
 
 Naamherkenning bij binnenkomende gesprekken werkt alleen als het nummer precies overeenkomt met wat het platform als beller-ID meestuurt. Komt er bijvoorbeeld `0612345678` binnen terwijl het telefoonboek `+31612345678` bevat, kies dan `"numberFormat": "national"`.
 
@@ -169,7 +171,7 @@ Naamherkenning bij binnenkomende gesprekken werkt alleen als het nummer precies 
 
 ## Huisstijl en footer
 
-Kleuren, lettertypen (Poppins en Play) en logo's komen van [itfm.nl](https://www.itfm.nl). Lettertypen en logo's staan in `public/fonts` en `public/brand` en worden door de app zelf geserveerd. Er worden dus geen externe bronnen geladen. De footer toont links naar het VoIP-platform, de Webphone en de website, plus "Deze app is een extra dienst van IT Friese Meren B.V. · <jaartal>". Het jaartal wordt automatisch bepaald. Aanpassen kan via `PORTAL_URL`, `WEBPHONE_URL`, `WEBSITE_URL` en `COMPANY_NAME`.
+Kleuren, lettertypen (Poppins en Play) en logo's komen van [itfm.nl](https://www.itfm.nl). Lettertypen en logo's staan in `public/fonts` en `public/brand` en worden door de app zelf geserveerd. Er worden dus geen externe bronnen geladen. De footer toont links naar het VoIP-platform, de Webphone en de website, plus "Deze app is een extra dienst van IT Friese Meren B.V. - <jaartal>". Het jaartal wordt automatisch bepaald. Aanpassen kan via `PORTAL_URL`, `WEBPHONE_URL`, `WEBSITE_URL` en `COMPANY_NAME`.
 
 ## Debuggen
 
@@ -181,12 +183,12 @@ Start met `DEBUG_UPSTREAM=1` om per aanroep naar Voys de status en de **vorm** v
 [collega's] bron voip-accounts: 12 ontvangen, 12 met toestelnummer
 ```
 
-Collega's komen uit de eerste bron die iets oplevert: gebruikers (v2) → VoIP-accounts (v2) → de klassieke phoneaccount-lijst (die ook de Klik-en-bel-extensie gebruikt). Welke bron werkt, hangt af van de rechten van het account.
+Collega's komen uit de eerste bron die iets oplevert: gebruikers (v2) -> VoIP-accounts (v2) -> de klassieke phoneaccount-lijst (die ook de Klik-en-bel-extensie gebruikt). Welke bron werkt, hangt af van de rechten van het account.
 
 ## Vereisten aan de Voys-kant
 
 - De gebruiker is een **klantgebruiker**. Partneraccounts mogen geen click-to-dial gebruiken, en de app geeft dan een duidelijke melding.
-- Het gekozen toestel is een VoIP-account dat aan de gebruiker gekoppeld is (in Freedom: gebruiker → bestemmingen). Bureautoestellen die daar staan, verschijnen automatisch onder **Bel via**.
+- Het gekozen toestel is een VoIP-account dat aan de gebruiker gekoppeld is (in Freedom: gebruiker -> bestemmingen). Bureautoestellen die daar staan, verschijnen automatisch onder **Bel via**.
 - Voor bureautoestellen met *auto answer*: dat bepaalt de klik-en-bel-instelling van de gebruiker in Freedom.
 
 ## Beveiliging
@@ -197,7 +199,7 @@ Collega's komen uit de eerste bron die iets oplevert: gebruikers (v2) → VoIP-a
 - Rate limiting op inlogpogingen, per e-mailadres en per IP.
 - Strikte Content-Security-Policy (geen inline scripts, geen externe bronnen), `X-Frame-Options: DENY`.
 - Gebruikers kunnen alleen de status van hun eigen gesprekken opvragen en ophangen.
-- Als Voys het token weigert (bijvoorbeeld na een wachtwoordwijziging), wordt de sessie direct beëindigd.
+- Als Voys het token weigert (bijvoorbeeld na een wachtwoordwijziging), wordt de sessie direct beeindigd.
 
 ## Projectstructuur
 
@@ -213,7 +215,7 @@ test/              tests + nagebootste Voys-API (test/mock-voys.js)
 
 ## Mogelijke uitbreidingen
 
-- Beschikbaarheid van collega's tonen via de *User status* API (`holodeck…/user-status`)
+- Beschikbaarheid van collega's tonen via de *User status* API (`holodeck.../user-status`)
 - Contacten toevoegen of bewerken (het Contactbook ondersteunt POST, PUT en DELETE)
 - Gespreksgeschiedenis via `GET /api/v2/call/personalized/`
 - Gespreksnotificaties (webhook) in plaats van polling voor de status
