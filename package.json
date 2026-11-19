@@ -2,6 +2,7 @@
   "name": "voys-contacts-dialer",
   "version": "1.0.0",
   "description": "Web app: log in met je Voys/VoIPGRID-account, kies een contact uit het gedeelde Contactbook en laat je bureautoestel bellen via Click-to-dial.",
+  "license": "MIT",
   "type": "module",
   "private": true,
   "engines": {

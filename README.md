@@ -237,3 +237,14 @@ test/              tests + nagebootste Voys-API (test/mock-voys.js)
 - Contacten toevoegen of bewerken (het Contactbook ondersteunt POST, PUT en DELETE)
 - Gespreksgeschiedenis via `GET /api/v2/call/personalized/`
 - Gespreksnotificaties (webhook) in plaats van polling voor de status
+
+## Licentie
+
+De broncode valt onder de [MIT-licentie](LICENSE) (c) 2026 IT Friese Meren B.V.
+
+Uitzonderingen, die **niet** onder de MIT-licentie vallen:
+
+- **Logo's en huisstijl** van IT Friese Meren B.V. (`public/brand/` en de app-iconen in `public/icons/`). Die zijn eigendom van IT Friese Meren B.V. en mogen niet worden hergebruikt. Wie dit project voor zichzelf inzet, vervangt ze door een eigen logo.
+- **Lettertypen** Poppins en Play (`public/fonts/`), die vallen onder de SIL Open Font License. Zie `OFL-Poppins.txt` en `OFL-Play.txt`.
+
+Voys, VoIPGRID, Vialer en Yealink zijn merken van hun respectieve eigenaren. Dit project is daar niet aan verbonden.
